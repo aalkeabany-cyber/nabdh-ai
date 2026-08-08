@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#091426">
+  <meta name="description" content="نبض AI — تحليل ذكي لتعليقات فيديوهات يوتيوب وفهم مشاعر الجمهور.">
+  <title>نبض AI | تحليل تعليقات يوتيوب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="نبض AI">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><path d="M7 25h7l4-10 7 20 5-13 4 7h7"/></svg>
+      </span>
+      <span class="brand-name">نبض <b>AI</b></span>
+    </a>
+    <div class="top-actions">
+      <span class="free-pill">✨ أداة ذكاء اصطناعي مجانية</span>
+      <button class="menu" id="menuBtn" aria-label="القائمة" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <button class="drawer-close" id="drawerClose" aria-label="إغلاق">×</button>
+    <a href="#home">الرئيسية</a>
+    <a href="#analyzer">ابدأ التحليل</a>
+    <a href="#features">المميزات</a>
+    <a href="#how">كيف يعمل؟</a>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <main id="home">
+    <section class="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <div class="copy">
+          <span class="eyebrow">✨ أداة ذكاء اصطناعي مجانية</span>
+          <h1>تحليل تعليقات<br>فيديوهات يوتيوب<br><span>في <strong>60</strong> ثانية</span></h1>
+          <p>احصل على تحليل فوري للمشاعر، واكتشف آراء الجمهور وأفضل اقتراحات المحتوى لأي فيديو على يوتيوب.</p>
+
+          <div class="analyzer" id="analyzer">
+            <label class="url-field" for="youtubeUrl">
+              <span class="youtube-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 22"><path d="M31.2 3.45A4.03 4.03 0 0 0 28.36.6C25.85 0 16 0 16 0S6.15 0 3.64.6A4.03 4.03 0 0 0 .8 3.45C.2 5.97 0 11 0 11s.2 5.03.8 7.55a4.03 4.03 0 0 0 2.84 2.85C6.15 22 16 22s9.85 0 12.36-.6a4.03 4.03 0 0 0 2.84-2.85C31.8 16.03 32 11 32 11s-.2-5.03-.8-7.55Z"/><path class="play" d="m12.8 15.7 8.3-4.7-8.3-4.7v9.4Z"/></svg>
+              </span>
+              <input id="youtubeUrl" inputmode="url" autocomplete="off" placeholder="ضع رابط فيديو YouTube هنا" aria-label="رابط فيديو يوتيوب">
+            </label>
+            <button class="analyze-btn" id="analyzeBtn" disabled><span>تحليل الآن</span><span>✦</span></button>
+            <div class="trust"><span>♢</span> لا يتطلب التسجيل · تحليل مجاني 100%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="section-title"><h2>ماذا ستحصل عليه؟</h2><i></i></div>
+
+      <div class="stats-grid">
+        <article class="stat positive">
+          <div class="stat-row"><span class="face">☺</span><div><small>إيجابية</small><b>72%</b></div></div>
+          <div class="meter"><i style="width:72%"></i></div>
+        </article>
+        <article class="stat neutral">
+          <div class="stat-row"><span class="face">—</span><div><small>محايدة</small><b>18%</b></div></div>
+          <div class="meter"><i style="width:18%"></i></div>
+        </article>
+        <article class="stat negative">
+          <div class="stat-row"><span class="face">⌢</span><div><small>سلبية</small><b>10%</b></div></div>
+          <div class="meter"><i style="width:10%"></i></div>
+        </article>
+      </div>
+
+      <div class="cards-grid">
+        <article class="feature-card">
+          <div class="feature-icon purple">●</div>
+          <h3>أهم آراء الجمهور</h3>
+          <p>اكتشف أكثر المواضيع التي يتحدث عنها الجمهور في التعليقات.</p>
+          <button data-scroll="#analyzer">عرض التفاصيل</button>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon blue">♧</div>
+          <h3>أفكار محتوى مقترحة</h3>
+          <p>احصل على أفضل أفكار الفيديوهات المستوحاة من تعليقات الجمهور.</p>
+          <button data-scroll="#analyzer">عرض التفاصيل</button>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon orange">!</div>
+          <h3>المشاكل والسلبيات</h3>
+          <p>تعرّف على أهم المشاكل والسلبيات التي أشار إليها الجمهور.</p>
+          <button data-scroll="#analyzer">عرض التفاصيل</button>
+        </article>
+      </div>
+
+      <div class="benefits" id="how">
+        <div><span class="bicon green">▥</span><p><b>تقرير شامل</b><small>كل ما تحتاج معرفته عن التعليقات</small></p></div>
+        <div><span class="bicon blue">🤖</span><p><b>ذكاء اصطناعي متقدم</b><small>تحليل المشاعر بدقة عالية</small></p></div>
+        <div><span class="bicon orange">ϟ</span><p><b>تحليل سريع</b><small>نتائج دقيقة خلال ثوانٍ</small></p></div>
+        <div><span class="bicon teal">♢</span><p><b>آمن 100%</b><small>نحافظ على خصوصيتك</small></p></div>
+      </div>
+    </section>
+
+    <section class="result" id="result" hidden>
+      <div class="result-head"><div><span>نتيجة التحليل</span><h2>ملخص تعليقات الفيديو</h2></div><button id="resetBtn">تحليل رابط آخر</button></div>
+      <p class="summary" id="summaryText">جاري تجهيز النتيجة...</p>
+      <div class="result-stats">
+        <div class="positive"><b id="positiveStat">—</b><small>إيجابي</small></div>
+        <div class="neutral"><b id="neutralStat">—</b><small>محايد</small></div>
+        <div class="negative"><b id="negativeStat">—</b><small>سلبي</small></div>
+      </div>
+      <div class="result-insights">
+        <article><h3>أبرز ما أعجب الجمهور</h3><p id="likedText">—</p></article>
+        <article><h3>أكثر ما طلبه الجمهور</h3><p id="requestedText">—</p></article>
+        <article><h3>فكرة محتوى مقترحة</h3><p id="ideaText">—</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>نبض AI © 2026 — جميع الحقوق محفوظة 🧡</footer>
+  <script src="script.js"></script>
+</body>
+</html>
