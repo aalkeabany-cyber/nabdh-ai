@@ -113,4 +113,35 @@
 @media(max-width:620px){
   .topbar{top:8px;left:10px;right:10px;height:64px;padding:0 12px 0 15px;border-radius:18px}.brand{font-size:20px}.brand-mark{width:40px;height:40px;border-radius:11px}.brand-mark svg{width:25px;height:25px}.free-pill{display:none}.menu{width:40px;height:40px}.hero{padding-top:72px;min-height:760px}.hero-bg{top:72px;height:315px;background-size:cover;background-position:center 40%}.hero-overlay{inset:72px 0 0;background:linear-gradient(180deg,rgba(255,250,245,.10) 0%,rgba(255,250,245,.35) 23%,rgba(255,250,245,.92) 47%,#fffaf5 68%)}.hero-content{min-height:688px;padding:235px 14px 35px}.eyebrow{font-size:11px;padding:7px 12px}.copy h1{font-size:41px;line-height:1.27;letter-spacing:-1.2px;margin:16px 0 10px}.copy>p{font-size:14px;line-height:1.8;margin-bottom:16px}.analyzer{width:100%;padding:11px;border-radius:20px}.url-field{height:55px;border-radius:14px}.url-field input{font-size:12px}.analyze-btn{height:53px;font-size:16px}.features{margin-top:-15px;border-radius:28px 28px 0 0;padding:27px 13px 30px}.section-title h2{font-size:22px}.stats-grid,.cards-grid{grid-template-columns:1fr;gap:12px}.stat{padding:17px}.stat-row{justify-content:space-between}.face{width:48px;height:48px}.feature-card{min-height:185px;padding:18px}.benefits{grid-template-columns:1fr;padding:10px}.benefits>div{border-bottom:1px solid #eef1f4}.benefits>div:last-child{border-bottom:0}.result{margin:24px 14px 45px;padding:20px 15px}.result-head{display:block}.result-head button{margin-top:12px}.result-stats{grid-template-columns:1fr}.result-stats>div{display:flex;justify-content:space-between;align-items:center}.result-stats b{font-size:26px}footer{padding-bottom:26px}
 } 
+@media (max-width:620px){
+
+  .hero{
+    min-height:620px !important;
+  }
+
+  .hero-bg{
+    height:470px !important;
+    background-position:center 38% !important;
+  }
+
+  .hero-content{
+    min-height:620px !important;
+    padding-top:360px !important;
+  }
+
+  .copy h1{
+    font-size:32px !important;
+    line-height:1.18 !important;
+    margin-top:14px !important;
+  }
+
+  .copy > p{
+    font-size:13px !important;
+    line-height:1.6 !important;
+  }
+
+  .analyzer{
+    margin-top:10px !important;
+  }
+}
 
