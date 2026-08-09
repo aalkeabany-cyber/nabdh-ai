@@ -106,23 +106,318 @@
       </div>
     </section>
 
-    <section class="result" id="result" hidden>
-      <div class="result-head"><div><span>نتيجة التحليل</span><h2>ملخص تعليقات الفيديو</h2></div><button id="resetBtn">تحليل رابط آخر</button></div>
-      <p class="summary" id="summaryText">جاري تجهيز النتيجة...</p>
-      <div class="result-stats">
-        <div class="positive"><b id="positiveStat">—</b><small>إيجابي</small></div>
-        <div class="neutral"><b id="neutralStat">—</b><small>محايد</small></div>
-        <div class="negative"><b id="negativeStat">—</b><small>سلبي</small></div>
+    <section id="result" class="result-section" hidden>
+  <div class="result-wrap">
+    <p class="result-kicker">نتيجة التحليل</p>
+    <div class="result-top">
+      <h2>ملخص تعليقات الفيديو</h2>
+      <button id="resetBtn" class="reset-btn">تحليل رابط آخر</button>
+    </div>
+
+    <div class="summary-box">
+      <p id="summaryText">سيظهر هنا ملخص التحليل بعد إدخال الرابط.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card positive">
+        <div class="stat-head">
+          <span>إيجابي</span>
+          <strong id="positiveStat">0%</strong>
+        </div>
+        <div class="progress">
+          <span id="positiveBar"></span>
+        </div>
       </div>
-      <div class="result-insights">
-        <article><h3>أبرز ما أعجب الجمهور</h3><p id="likedText">—</p></article>
-        <article><h3>أكثر ما طلبه الجمهور</h3><p id="requestedText">—</p></article>
-        <article><h3>فكرة محتوى مقترحة</h3><p id="ideaText">—</p></article>
+
+      <div class="stat-card neutral">
+        <div class="stat-head">
+          <span>محايد</span>
+          <strong id="neutralStat">0%</strong>
+        </div>
+        <div class="progress">
+          <span id="neutralBar"></span>
+        </div>
       </div>
-    </section>
+
+      <div class="stat-card negative">
+        <div class="stat-head">
+          <span>سلبي</span>
+          <strong id="negativeStat">0%</strong>
+        </div>
+        <div class="progress">
+          <span id="negativeBar"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="details-grid">
+      <div class="detail-card opinions">
+        <h3>أهم آراء الجمهور</h3>
+        <p>اكتشف أكثر المواضيع التي يتحدث عنها الجمهور في التعليقات.</p>
+        <div class="detail-box" id="likedText">-</div>
+      </div>
+
+      <div class="detail-card ideas">
+        <h3>أفكار محتوى مقترحة</h3>
+        <p>احصل على أفضل أفكار الفيديوهات المستوحاة من تعليقات الجمهور.</p>
+        <div class="detail-box" id="requestedText">-</div>
+      </div>
+
+      <div class="detail-card problems">
+        <h3>المشاكل والسلبيات</h3>
+        <p>تعرّف على أهم المشاكل والسلبيات التي أشار إليها الجمهور.</p>
+        <div class="detail-box" id="ideaText">-</div>
+      </div>
+    </div>
+  </div>
+</section>
   </main>
 
   <footer>نبض AI © 2026 — جميع الحقوق محفوظة 🧡</footer>
   <script src="script.js"></script>
 </body>
 </html>
+/* ===== Result Section ===== */
+.result-section{
+  padding: 40px 16px 70px;
+}
+
+.result-wrap{
+  max-width: 1180px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 28px;
+  padding: 32px 22px;
+  box-shadow: 0 10px 35px rgba(9,20,38,.08);
+  border: 1px solid #eef1f6;
+}
+
+.result-kicker{
+  color: #ff6a1a;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.result-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.result-top h2{
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.15;
+  color: #091426;
+  font-weight: 900;
+}
+
+.reset-btn{
+  border: none;
+  background: #f3f5fb;
+  color: #44506a;
+  padding: 16px 24px;
+  border-radius: 18px;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.summary-box{
+  background: #fff8f4;
+  border: 1px solid #f7d9c9;
+  border-radius: 22px;
+  padding: 28px 22px;
+  margin-bottom: 28px;
+}
+
+.summary-box p{
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.9;
+  color: #5a6477;
+}
+
+.stats-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.stat-card{
+  background: #fff;
+  border: 1px solid #eef1f6;
+  border-radius: 24px;
+  padding: 26px 22px;
+  box-shadow: 0 8px 20px rgba(15,23,42,.05);
+}
+
+.stat-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.stat-head span{
+  color: #6f7a8b;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.stat-head strong{
+  font-size: 52px;
+  font-weight: 900;
+}
+
+.positive strong{ color: #18b45b; }
+.neutral strong{ color: #e3a300; }
+.negative strong{ color: #ef3d36; }
+
+.progress{
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: #eceff5;
+  overflow: hidden;
+}
+
+.progress span{
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+.positive .progress span{ background: #18b45b; }
+.neutral .progress span{ background: #e3a300; }
+.negative .progress span{ background: #ef3d36; }
+
+.details-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.detail-card{
+  background: #fff;
+  border: 1px solid #eef1f6;
+  border-radius: 24px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 20px rgba(15,23,42,.05);
+}
+
+.detail-card h3{
+  margin: 0 0 10px;
+  font-size: 28px;
+  color: #091426;
+  font-weight: 900;
+}
+
+.detail-card p{
+  margin: 0 0 18px;
+  color: #7b8494;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.detail-box{
+  min-height: 140px;
+  border-radius: 18px;
+  padding: 18px;
+  font-size: 20px;
+  line-height: 1.9;
+  font-weight: 600;
+  white-space: pre-line;
+}
+
+.opinions .detail-box{
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.ideas .detail-box{
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.problems .detail-box{
+  background: #fff1e8;
+  color: #f97316;
+}
+
+@media (max-width: 991px){
+  .result-top h2{
+    font-size: 34px;
+  }
+
+  .summary-box p{
+    font-size: 21px;
+  }
+
+  .stats-grid,
+  .details-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .stat-head span{
+    font-size: 22px;
+  }
+
+  .stat-head strong{
+    font-size: 42px;
+  }
+
+  .detail-card h3{
+    font-size: 24px;
+  }
+
+  .detail-box{
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 640px){
+  .result-wrap{
+    padding: 24px 16px;
+    border-radius: 22px;
+  }
+
+  .result-top h2{
+    font-size: 28px;
+  }
+
+  .reset-btn{
+    width: 100%;
+    font-size: 16px;
+    padding: 14px 18px;
+  }
+
+  .summary-box{
+    padding: 22px 16px;
+  }
+
+  .summary-box p{
+    font-size: 18px;
+  }
+
+  .stat-card,
+  .detail-card{
+    border-radius: 20px;
+    padding: 18px 16px;
+  }
+
+  .stat-head strong{
+    font-size: 36px;
+  }
+
+  .detail-box{
+    min-height: 110px;
+  }
+}
