@@ -1,15 +1,230 @@
-const $=id=>document.getElementById(id);const urlInput=$('youtubeUrl'),analyzeBtn=$('analyzeBtn'),result=$('result'),resetBtn=$('resetBtn'),menuBtn=$('menuBtn'),drawer=$('drawer'),drawerClose=$('drawerClose'),backdrop=$('backdrop');
-function isYouTubeUrl(v){try{const u=new URL(v.trim());const h=u.hostname.replace('www.','');return ['youtube.com','m.youtube.com','youtu.be'].includes(h)}catch{return false}}
-function sync(){const ready=isYouTubeUrl(urlInput.value);analyzeBtn.disabled=!ready;analyzeBtn.classList.toggle('ready',ready)}urlInput.addEventListener('input',sync);
-function fill(a,n=0){$('summaryText').textContent=`${a.summary||'تم التحليل.'}${n?` — تم تحليل ${n} تعليقًا.`:''}`;$('positiveStat').textContent=`${Number(a.positive)||0}%`;$('neutralStat').textContent=`${Number(a.neutral)||0}%`;$('negativeStat').textContent=`${Number(a.negative)||0}%`;$('likedText').textContent=a.liked||'—';$('requestedText').textContent=a.requested||'—';$('ideaText').textContent=a.idea||'—';result.hidden=false;result.scrollIntoView({behavior:'smooth',block:'start'})}
-analyzeBtn.addEventListener('click',async()=>{if(!isYouTubeUrl(urlInput.value))return;const old=analyzeBtn.innerHTML;analyzeBtn.disabled=true;analyzeBtn.classList.remove('ready');analyzeBtn.innerHTML='<span>جاري التحليل...</span>';result.hidden=true;try{const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({youtubeUrl:urlInput.value.trim()})});const d=await r.json();if(!r.ok)throw new Error(d.error||'تعذر إكمال التحليل.');fill({
-  summary:d.summary||'',
-  positive:d.positive||0,
-  neutral:d.neutral||0,
-  negative:d.negative||0,
-  liked:(d.audienceOpinions||[]).join(' • '),
-  requested:(d.contentIdeas||[]).join(' • '),
-  idea:(d.problems||[]).join(' • ')
-},d.commentsAnalyzed||0)}catch(e){fill({summary:e.message.includes('Failed to fetch')||location.hostname.includes('github.io')?'التصميم يعمل على GitHub Pages. التحليل الحقيقي يحتاج نشر المشروع على Netlify وإضافة مفاتيح YouTube وOpenAI.':e.message,positive:0,neutral:0,negative:0,liked:'—',requested:'—',idea:'—'})}finally{analyzeBtn.innerHTML=old;sync()}});
-resetBtn.addEventListener('click',()=>{result.hidden=true;urlInput.value='';sync();$('analyzer').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>urlInput.focus(),400)});document.querySelectorAll('[data-scroll]').forEach(b=>b.addEventListener('click',()=>document.querySelector(b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
-function openMenu(){drawer.classList.add('open');backdrop.classList.add('show');drawer.setAttribute('aria-hidden','false');menuBtn.setAttribute('aria-expanded','true')}function closeMenu(){drawer.classList.remove('open');backdrop.classList.remove('show');drawer.setAttribute('aria-hidden','true');menuBtn.setAttribute('aria-expanded','false')}menuBtn.addEventListener('click',openMenu);drawerClose.addEventListener('click',closeMenu);backdrop.addEventListener('click',closeMenu);drawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',closeMenu));
+const $ = (id) => document.getElementById(id);
+
+const urlInput = $('youtubeUrl');
+const analyzeBtn = $('analyzeBtn');
+const result = $('result');
+const resetBtn = $('resetBtn');
+
+const menuBtn = $('menuBtn');
+const drawer = $('drawer');
+const drawerClose = $('drawerClose');
+const backdrop = $('backdrop');
+
+function isYouTubeUrl(value) {
+  try {
+    const url = new URL(value.trim());
+    const host = url.hostname.replace('www.', '');
+
+    return (
+      host === 'youtube.com' ||
+      host === 'm.youtube.com' ||
+      host === 'youtu.be'
+    );
+  } catch {
+    return false;
+  }
+}
+
+function sync() {
+  if (!urlInput || !analyzeBtn) return;
+
+  const ready = isYouTubeUrl(urlInput.value);
+
+  analyzeBtn.disabled = !ready;
+  analyzeBtn.classList.toggle('ready', ready);
+}
+
+function arrayToText(items) {
+  if (!Array.isArray(items) || !items.length) return '—';
+
+  return items.map(item => `• ${item}`).join('\n');
+}
+
+function fill(data, commentsCount = 0) {
+  const positive = Number(data.positive) || 0;
+  const neutral = Number(data.neutral) || 0;
+  const negative = Number(data.negative) || 0;
+
+  const summaryText = $('summaryText');
+  const positiveStat = $('positiveStat');
+  const neutralStat = $('neutralStat');
+  const negativeStat = $('negativeStat');
+
+  const positiveBar = $('positiveBar');
+  const neutralBar = $('neutralBar');
+  const negativeBar = $('negativeBar');
+
+  const likedText = $('likedText');
+  const requestedText = $('requestedText');
+  const ideaText = $('ideaText');
+
+  if (summaryText) {
+    summaryText.textContent =
+      `${data.summary || 'لا يوجد ملخص.'}` +
+      (commentsCount ? ` — تم تحليل ${commentsCount} تعليقًا.` : '');
+  }
+
+  if (positiveStat) positiveStat.textContent = `${positive}%`;
+  if (neutralStat) neutralStat.textContent = `${neutral}%`;
+  if (negativeStat) negativeStat.textContent = `${negative}%`;
+
+  if (positiveBar) positiveBar.style.width = `${positive}%`;
+  if (neutralBar) neutralBar.style.width = `${neutral}%`;
+  if (negativeBar) negativeBar.style.width = `${negative}%`;
+
+  if (likedText) likedText.textContent = data.liked || '—';
+  if (requestedText) requestedText.textContent = data.requested || '—';
+  if (ideaText) ideaText.textContent = data.idea || '—';
+
+  if (result) {
+    result.hidden = false;
+    result.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+if (urlInput) {
+  urlInput.addEventListener('input', sync);
+}
+
+if (analyzeBtn) {
+  analyzeBtn.addEventListener('click', async () => {
+    if (!isYouTubeUrl(urlInput.value)) return;
+
+    const oldText = analyzeBtn.innerHTML;
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.classList.remove('ready');
+    analyzeBtn.innerHTML = '<span>جاري التحليل...</span>';
+
+    if (result) result.hidden = true;
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          youtubeUrl: urlInput.value.trim()
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'تعذر إكمال التحليل.');
+      }
+
+      fill(
+        {
+          summary:
+            data.summary ||
+            data.analysis?.summary ||
+            '',
+
+          positive:
+            data.positive ??
+            data.analysis?.sentiment?.positive ??
+            0,
+
+          neutral:
+            data.neutral ??
+            data.analysis?.sentiment?.neutral ??
+            0,
+
+          negative:
+            data.negative ??
+            data.analysis?.sentiment?.negative ??
+            0,
+
+          liked: arrayToText(
+            data.audienceOpinions ||
+            data.analysis?.audienceOpinions
+          ),
+
+          requested: arrayToText(
+            data.contentIdeas ||
+            data.analysis?.contentIdeas
+          ),
+
+          idea: arrayToText(
+            data.problems ||
+            data.analysis?.problems
+          )
+        },
+        data.commentsAnalyzed || 0
+      );
+
+    } catch (error) {
+      fill({
+        summary: error.message,
+        positive: 0,
+        neutral: 0,
+        negative: 0,
+        liked: '—',
+        requested: '—',
+        idea: '—'
+      });
+    } finally {
+      analyzeBtn.innerHTML = oldText;
+      sync();
+    }
+  });
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener('click', () => {
+    if (result) result.hidden = true;
+
+    if (urlInput) {
+      urlInput.value = '';
+      sync();
+
+      document.getElementById('analyzer')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+
+      setTimeout(() => urlInput.focus(), 400);
+    }
+  });
+}
+
+/* القائمة */
+function openMenu() {
+  drawer?.classList.add('open');
+  backdrop?.classList.add('show');
+
+  drawer?.setAttribute('aria-hidden', 'false');
+  menuBtn?.setAttribute('aria-expanded', 'true');
+}
+
+function closeMenu() {
+  drawer?.classList.remove('open');
+  backdrop?.classList.remove('show');
+
+  drawer?.setAttribute('aria-hidden', 'true');
+  menuBtn?.setAttribute('aria-expanded', 'false');
+}
+
+menuBtn?.addEventListener('click', openMenu);
+drawerClose?.addEventListener('click', closeMenu);
+backdrop?.addEventListener('click', closeMenu);
+
+document.querySelectorAll('[data-scroll]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const target = document.querySelector(button.dataset.scroll);
+
+    target?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    });
+
+    closeMenu();
+  });
+});
+
+sync();
