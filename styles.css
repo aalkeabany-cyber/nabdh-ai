@@ -144,4 +144,53 @@
     margin-top:10px !important;
   }
 }
+@media (max-width:620px){
 
+  .hero{
+    min-height:560px !important;
+  }
+
+  .hero-bg{
+    height:390px !important;
+    background-size:cover !important;
+    background-position:center 42% !important;
+  }
+
+  .hero-content{
+    min-height:560px !important;
+    padding-top:300px !important;
+    padding-bottom:20px !important;
+  }
+
+  .eyebrow{
+    margin-bottom:8px !important;
+  }
+
+  .copy h1{
+    font-size:30px !important;
+    line-height:1.15 !important;
+    margin:8px 0 10px !important;
+  }
+
+  .copy > p{
+    font-size:13px !important;
+    line-height:1.55 !important;
+    margin-bottom:12px !important;
+  }
+
+  .analyzer{
+    margin-top:6px !important;
+  }
+
+  .url-field{
+    height:50px !important;
+  }
+
+  .analyze-btn{
+    height:48px !important;
+  }
+
+  .features{
+    margin-top:-5px !important;
+  }
+}
