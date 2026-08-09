@@ -428,7 +428,115 @@
   .detail-card{
     border-radius: 20px;
     padding: 18px 16px;
+  } 
+  /* ===== تحسين نتائج نبض AI على الهاتف ===== */
+@media (max-width: 700px){
+
+  .result-section{
+    padding: 18px 10px 45px;
   }
+
+  .result-wrap{
+    padding: 22px 14px;
+    border-radius: 24px;
+  }
+
+  .result-kicker{
+    font-size: 17px;
+    margin-bottom: 8px;
+  }
+
+  .result-top{
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .result-top h2{
+    width: 100%;
+    font-size: 31px;
+    line-height: 1.35;
+  }
+
+  .reset-btn{
+    width: 100%;
+    padding: 15px;
+    border-radius: 18px;
+    font-size: 17px;
+  }
+
+  .summary-box{
+    padding: 22px 17px;
+    border-radius: 22px;
+    margin-bottom: 20px;
+  }
+
+  .summary-box p{
+    font-size: 18px;
+    line-height: 2;
+  }
+
+  /* النسب */
+  .stats-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .stat-card{
+    padding: 22px 18px;
+    border-radius: 22px;
+    min-height: 145px;
+  }
+
+  .stat-head{
+    margin-bottom: 22px;
+  }
+
+  .stat-head span{
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .stat-head strong{
+    font-size: 43px;
+  }
+
+  .progress{
+    height: 10px;
+  }
+
+  /* بطاقات التفاصيل */
+  .details-grid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .detail-card{
+    padding: 21px 17px;
+    border-radius: 22px;
+  }
+
+  .detail-card h3{
+    font-size: 23px;
+    margin-bottom: 8px;
+  }
+
+  .detail-card p{
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 14px;
+  }
+
+  .detail-box{
+    min-height: auto;
+    padding: 16px;
+    border-radius: 17px;
+    font-size: 17px;
+    line-height: 1.9;
+  }
+}
 
   .stat-head strong{
     font-size: 36px;
