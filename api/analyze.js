@@ -1,323 +1,620 @@
-export async function POST(request) {
-  try {
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+const MODEL = "gemini-2.5-flash";
+const MAX_COMMENTS = 300;
+const CHUNK_SIZE = 50;
+const FIXED_SEED = 260814;
 
-    if (!GEMINI_API_KEY || !YOUTUBE_API_KEY) {
-      return Response.json(
-        { error: "مفاتيح API غير موجودة في Vercel." },
-        { status: 500 }
-      );
-    }
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Content-Type": "application/json; charset=utf-8",
+};
 
-    const body = await request.json();
-    const videoUrl =
-      body.url ||
-      body.videoUrl ||
-      body.youtubeUrl ||
-      "";
-
-    const videoId = getVideoId(videoUrl);
-
-    if (!videoId) {
-      return Response.json(
-        { error: "رابط YouTube غير صحيح." },
-        { status: 400 }
-      );
-    }
-
-    // جلب حتى 100 تعليق من YouTube
-    const youtubeUrl =
-      "https://www.googleapis.com/youtube/v3/commentThreads" +
-      "?part=snippet" +
-      "&videoId=" + encodeURIComponent(videoId) +
-      "&maxResults=100" +
-      "&order=relevance" +
-      "&textFormat=plainText" +
-      "&key=" + encodeURIComponent(YOUTUBE_API_KEY);
-
-    const youtubeResponse = await fetch(youtubeUrl);
-    const youtubeData = await youtubeResponse.json();
-
-    if (!youtubeResponse.ok) {
-      const message =
-        youtubeData?.error?.message ||
-        "تعذر جلب تعليقات الفيديو.";
-
-      return Response.json(
-        { error: message },
-        { status: youtubeResponse.status }
-      );
-    }
-
-    const comments = (youtubeData.items || [])
-      .map((item) => {
-        const snippet =
-          item?.snippet?.topLevelComment?.snippet;
-
-        return {
-          text: snippet?.textDisplay || "",
-          likes: snippet?.likeCount || 0
-        };
-      })
-      .filter((comment) => comment.text)
-      .map((comment) => ({
-        ...comment,
-        text: comment.text.slice(0, 500)
-      }));
-
-    if (comments.length === 0) {
-      return Response.json(
-        { error: "لم نجد تعليقات عامة لهذا الفيديو." },
-        { status: 400 }
-      );
-    }
-
-    const commentsText = comments
-      .map(
-        (comment, index) =>
-          `${index + 1}. ${comment.text} | الإعجابات: ${comment.likes}`
-      )
-      .join("\n");
-
-    const prompt = `
-أنت محلل محترف لتعليقات YouTube.
-
-حلل التعليقات التالية باللغة العربية.
-
-أريد منك:
-1. تحديد نسبة التعليقات الإيجابية والمحايدة والسلبية.
-2. تلخيص رأي الجمهور.
-3. استخراج أهم المواضيع التي يتحدث عنها الجمهور.
-4. اقتراح أفكار محتوى جديدة لصاحب الفيديو.
-5. استخراج المشاكل والانتقادات والسلبيات.
-6. تقديم توصيات عملية لتحسين المحتوى.
-
-يجب أن تكون نسب:
-positive + neutral + negative = 100
-
-أعد النتيجة بصيغة JSON فقط، بدون Markdown وبدون شرح إضافي، بهذا الشكل:
-
-{
-  "summary": "ملخص عربي قصير",
-  "sentiment": {
-    "positive": 0,
-    "neutral": 0,
-    "negative": 0
-  },
-  "audienceOpinions": [
-    "رأي 1",
-    "رأي 2",
-    "رأي 3"
-  ],
-  "topTopics": [
-    "موضوع 1",
-    "موضوع 2",
-    "موضوع 3"
-  ],
-  "contentIdeas": [
-    "فكرة 1",
-    "فكرة 2",
-    "فكرة 3"
-  ],
-  "problems": [
-    "مشكلة أو سلبية 1",
-    "مشكلة أو سلبية 2"
-  ],
-  "recommendations": [
-    "توصية 1",
-    "توصية 2",
-    "توصية 3"
-  ]
-}
-
-التعليقات:
-${commentsText}
-`;
-
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.2
-          }
-        })
-      }
-    );
-
-    const geminiData = await geminiResponse.json();
-
-    if (!geminiResponse.ok) {
-      return Response.json(
-        {
-          error:
-            geminiData?.error?.message ||
-            "حدث خطأ أثناء تحليل التعليقات بواسطة Gemini."
-        },
-        { status: geminiResponse.status }
-      );
-    }
-
-    let text =
-      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "";
-
-    text = text
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
-      .trim();
-
-    let analysis;
-
-    try {
-      analysis = JSON.parse(text);
-    } catch {
-      const match = text.match(/\{[\s\S]*\}/);
-
-      if (!match) {
-        throw new Error("Gemini لم يُرجع نتيجة قابلة للقراءة.");
-      }
-
-      analysis = JSON.parse(match[0]);
-    }
-
-    const positive = clampNumber(
-      analysis?.sentiment?.positive
-    );
-
-    const neutral = clampNumber(
-      analysis?.sentiment?.neutral
-    );
-
-    const negative = clampNumber(
-      analysis?.sentiment?.negative
-    );
-
-    const total = positive + neutral + negative;
-
-    if (total > 0 && total !== 100) {
-      analysis.sentiment = {
-        positive: Math.round((positive / total) * 100),
-        neutral: Math.round((neutral / total) * 100),
-        negative: Math.round((negative / total) * 100)
-      };
-
-      const fixedTotal =
-        analysis.sentiment.positive +
-        analysis.sentiment.neutral +
-        analysis.sentiment.negative;
-
-      analysis.sentiment.positive +=
-        100 - fixedTotal;
-    }
-
-    return Response.json({
-      success: true,
-      videoId,
-      commentsAnalyzed: comments.length,
-
-      positive: analysis.sentiment?.positive || 0,
-      neutral: analysis.sentiment?.neutral || 0,
-      negative: analysis.sentiment?.negative || 0,
-
-      summary: analysis.summary || "",
-      audienceOpinions: analysis.audienceOpinions || [],
-      topTopics: analysis.topTopics || [],
-      contentIdeas: analysis.contentIdeas || [],
-      problems: analysis.problems || [],
-      recommendations: analysis.recommendations || [],
-
-      analysis
-    });
-  } catch (error) {
-    console.error(error);
-
-    return Response.json(
-      {
-        error:
-          error?.message ||
-          "حدث خطأ غير متوقع أثناء التحليل."
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export function GET() {
-  return Response.json({
-    success: true,
-    message: "Nabdh AI API is running"
+function sendJson(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: corsHeaders,
   });
 }
 
 function getVideoId(input) {
-  if (!input) return null;
-
-  const value = String(input).trim();
-
-  if (/^[a-zA-Z0-9_-]{11}$/.test(value)) {
-    return value;
-  }
-
   try {
-    const url = new URL(value);
+    const url = new URL(input);
 
-    if (
-      url.hostname === "youtu.be" ||
-      url.hostname === "www.youtu.be"
-    ) {
-      return url.pathname
-        .split("/")
-        .filter(Boolean)[0] || null;
+    if (url.hostname.includes("youtu.be")) {
+      return url.pathname.split("/").filter(Boolean)[0] || null;
     }
 
-    if (
-      url.hostname.includes("youtube.com")
-    ) {
-      const watchId = url.searchParams.get("v");
+    const normalId = url.searchParams.get("v");
+    if (normalId) return normalId;
 
-      if (watchId) return watchId;
+    const parts = url.pathname.split("/").filter(Boolean);
 
-      const parts = url.pathname
-        .split("/")
-        .filter(Boolean);
-
-      if (
-        ["shorts", "embed", "live"].includes(parts[0]) &&
-        parts[1]
-      ) {
-        return parts[1];
-      }
+    const shortsIndex = parts.indexOf("shorts");
+    if (shortsIndex !== -1 && parts[shortsIndex + 1]) {
+      return parts[shortsIndex + 1];
     }
+
+    const embedIndex = parts.indexOf("embed");
+    if (embedIndex !== -1 && parts[embedIndex + 1]) {
+      return parts[embedIndex + 1];
+    }
+
+    return null;
   } catch {
     return null;
   }
-
-  return null;
 }
 
-function clampNumber(value) {
-  const number = Number(value);
+async function getComments(videoId, youtubeKey) {
+  const comments = [];
+  let pageToken = "";
 
-  if (!Number.isFinite(number)) return 0;
+  while (comments.length < MAX_COMMENTS) {
+    const params = new URLSearchParams({
+      part: "snippet",
+      videoId: videoId,
+      maxResults: "100",
+      order: "time",
+      textFormat: "plainText",
+      key: youtubeKey,
+    });
 
-  return Math.max(
-    0,
-    Math.min(100, Math.round(number))
+    if (pageToken) {
+      params.set("pageToken", pageToken);
+    }
+
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/commentThreads?${params}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error?.message || "فشل جلب تعليقات YouTube."
+      );
+    }
+
+    for (const item of data.items || []) {
+      const topComment = item?.snippet?.topLevelComment;
+
+      const id = topComment?.id;
+      const snippet = topComment?.snippet;
+      const text =
+        snippet?.textDisplay ||
+        snippet?.textOriginal ||
+        "";
+
+      if (!id || !text.trim()) continue;
+
+      comments.push({
+        id,
+        text: text.trim(),
+      });
+
+      if (comments.length >= MAX_COMMENTS) break;
+    }
+
+    pageToken = data.nextPageToken || "";
+
+    if (!pageToken) break;
+  }
+
+  const unique = new Map();
+
+  for (const comment of comments) {
+    if (!unique.has(comment.id)) {
+      unique.set(comment.id, comment);
+    }
+  }
+
+  return Array.from(unique.values());
+}
+
+const sentimentSchema = {
+  type: "object",
+  properties: {
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+          },
+          sentiment: {
+            type: "string",
+            enum: [
+              "positive",
+              "neutral",
+              "negative"
+            ],
+          },
+        },
+        required: [
+          "id",
+          "sentiment"
+        ],
+      },
+    },
+  },
+  required: ["results"],
+};
+
+async function askGemini(
+  prompt,
+  schema,
+  geminiKey,
+  seed
+) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(
+      geminiKey
+    )}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+
+        generationConfig: {
+          temperature: 0,
+          seed: seed,
+          candidateCount: 1,
+          maxOutputTokens: 8192,
+          responseMimeType: "application/json",
+          responseJsonSchema: schema,
+        },
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error(data);
+
+    throw new Error(
+      data?.error?.message ||
+      "حدث خطأ أثناء الاتصال بـ Gemini."
+    );
+  }
+
+  const text =
+    data?.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("") || "";
+
+  if (!text) {
+    throw new Error(
+      "لم يرجع Gemini نتيجة صالحة."
+    );
+  }
+
+  return JSON.parse(text);
+}
+
+async function classifyChunk(
+  comments,
+  geminiKey,
+  chunkNumber
+) {
+  const input = comments.map((comment) => ({
+    id: comment.id,
+    text: comment.text,
+  }));
+
+  const prompt = `
+أنت نظام دقيق ومتخصص في تحليل مشاعر تعليقات YouTube.
+
+صنف كل تعليق إلى تصنيف واحد فقط:
+
+positive = إيجابي
+neutral = محايد
+negative = سلبي
+
+قواعد مهمة جداً:
+
+- افهم العربية الفصحى واللهجات العربية والإنجليزية.
+- افهم الإيموجي والسخرية قدر الإمكان.
+- المدح والشكر والتشجيع والإعجاب = positive.
+- الانتقاد والرفض وعدم الرضا والهجوم الواضح = negative.
+- السؤال أو المعلومة بلا موقف واضح = neutral.
+- إذا كان التعليق يجمع مدحاً وانتقاداً بشكل متوازن فصنفه neutral.
+- الحزن على موضوع الفيديو لا يعني أن صاحب التعليق يكره الفيديو.
+- مثال: "الله يرحمه 😢" لا يصنف سلبياً لمجرد وجود الحزن.
+- صنف رأي صاحب التعليق تجاه المحتوى.
+- لا تخترع أي ID.
+- يجب إعادة تصنيف لكل ID موجود.
+- لا تغير نصوص الـ ID.
+
+التعليقات:
+
+${JSON.stringify(input)}
+`;
+
+  const result = await askGemini(
+    prompt,
+    sentimentSchema,
+    geminiKey,
+    FIXED_SEED + chunkNumber
+  );
+
+  return result.results || [];
+}
+
+async function classifyAll(
+  comments,
+  geminiKey
+) {
+  const classifications = new Map();
+
+  for (
+    let i = 0;
+    i < comments.length;
+    i += CHUNK_SIZE
+  ) {
+    const chunk =
+      comments.slice(i, i + CHUNK_SIZE);
+
+    const result = await classifyChunk(
+      chunk,
+      geminiKey,
+      Math.floor(i / CHUNK_SIZE)
+    );
+
+    for (const item of result) {
+      if (
+        item?.id &&
+        [
+          "positive",
+          "neutral",
+          "negative"
+        ].includes(item.sentiment)
+      ) {
+        classifications.set(
+          item.id,
+          item.sentiment
+        );
+      }
+    }
+  }
+
+  return comments.map((comment) => ({
+    ...comment,
+
+    sentiment:
+      classifications.get(comment.id) ||
+      "neutral",
+  }));
+}
+
+function calculatePercentages(comments) {
+  const counts = {
+    positive: 0,
+    neutral: 0,
+    negative: 0,
+  };
+
+  for (const comment of comments) {
+    if (
+      Object.prototype.hasOwnProperty.call(
+        counts,
+        comment.sentiment
+      )
+    ) {
+      counts[comment.sentiment]++;
+    }
+  }
+
+  const total = comments.length;
+
+  if (!total) {
+    return {
+      counts,
+      positive: 0,
+      neutral: 0,
+      negative: 0,
+    };
+  }
+
+  const values = [
+    {
+      key: "positive",
+      raw: counts.positive / total * 100,
+    },
+    {
+      key: "neutral",
+      raw: counts.neutral / total * 100,
+    },
+    {
+      key: "negative",
+      raw: counts.negative / total * 100,
+    },
+  ];
+
+  const result = {};
+  let used = 0;
+
+  for (const item of values) {
+    result[item.key] =
+      Math.floor(item.raw);
+
+    used += result[item.key];
+  }
+
+  let remaining = 100 - used;
+
+  values
+    .map((item) => ({
+      ...item,
+      fraction:
+        item.raw - Math.floor(item.raw),
+    }))
+    .sort(
+      (a, b) =>
+        b.fraction - a.fraction
+    )
+    .forEach((item) => {
+      if (remaining > 0) {
+        result[item.key]++;
+        remaining--;
+      }
+    });
+
+  return {
+    counts,
+    positive: result.positive,
+    neutral: result.neutral,
+    negative: result.negative,
+  };
+}
+
+const insightSchema = {
+  type: "object",
+  properties: {
+    summary: {
+      type: "string",
+    },
+
+    audienceOpinions: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+
+    contentIdeas: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+    },
+  },
+
+  required: [
+    "summary",
+    "audienceOpinions",
+    "contentIdeas"
+  ],
+};
+
+async function createInsights(
+  comments,
+  stats,
+  geminiKey
+) {
+  const sample =
+    comments.slice(0, 120).map(
+      (comment) => ({
+        text: comment.text,
+        sentiment: comment.sentiment,
+      })
+    );
+
+  const prompt = `
+أنت محلل جمهور محترف في منصة نبض AI.
+
+تم تحليل ${comments.length} تعليقاً حقيقياً.
+
+النتيجة المحسوبة برمجياً:
+
+إيجابي:
+${stats.positive}%
+
+محايد:
+${stats.neutral}%
+
+سلبي:
+${stats.negative}%
+
+الأعداد:
+
+إيجابي:
+${stats.counts.positive}
+
+محايد:
+${stats.counts.neutral}
+
+سلبي:
+${stats.counts.negative}
+
+هذه عينة ثابتة من التعليقات:
+
+${JSON.stringify(sample)}
+
+المطلوب:
+
+summary:
+اكتب ملخصاً عربياً احترافياً وقصيراً يشرح رأي الجمهور.
+
+audienceOpinions:
+اكتب أهم آراء الجمهور المتكررة، بحد أقصى 5 نقاط.
+
+contentIdeas:
+اقترح بحد أقصى 5 أفكار مفيدة لصاحب الفيديو بناءً على التعليقات.
+
+مهم جداً:
+لا تغير نسب المشاعر.
+لا تخترع آراء غير موجودة في التعليقات.
+`;
+
+  return askGemini(
+    prompt,
+    insightSchema,
+    geminiKey,
+    FIXED_SEED + 5000
   );
 }
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
+
+export async function POST(request) {
+  try {
+    const GEMINI_API_KEY =
+      process.env.GEMINI_API_KEY;
+
+    const YOUTUBE_API_KEY =
+      process.env.YOUTUBE_API_KEY;
+
+    if (
+      !GEMINI_API_KEY ||
+      !YOUTUBE_API_KEY
+    ) {
+      return sendJson(
+        {
+          error:
+            "مفاتيح API غير موجودة في Vercel.",
+        },
+        500
+      );
+    }
+
+    const body = await request.json();
+
+    const videoUrl =
+      body?.url ||
+      body?.videoUrl ||
+      body?.youtubeUrl ||
+      "";
+
+    if (!videoUrl.trim()) {
+      return sendJson(
+        {
+          error:
+            "أدخل رابط فيديو YouTube.",
+        },
+        400
+      );
+    }
+
+    const videoId =
+      getVideoId(videoUrl.trim());
+
+    if (!videoId) {
+      return sendJson(
+        {
+          error:
+            "رابط YouTube غير صالح.",
+        },
+        400
+      );
+    }
+
+    const comments =
+      await getComments(
+        videoId,
+        YOUTUBE_API_KEY
+      );
+
+    if (!comments.length) {
+      return sendJson(
+        {
+          error:
+            "لم يتم العثور على تعليقات لهذا الفيديو.",
+        },
+        400
+      );
+    }
+
+    const classified =
+      await classifyAll(
+        comments,
+        GEMINI_API_KEY
+      );
+
+    const stats =
+      calculatePercentages(classified);
+
+    const insights =
+      await createInsights(
+        classified,
+        stats,
+        GEMINI_API_KEY
+      );
+
+    return sendJson({
+      success: true,
+
+      videoId,
+
+      commentsCount:
+        classified.length,
+
+      analyzedComments:
+        classified.length,
+
+      positive:
+        stats.positive,
+
+      neutral:
+        stats.neutral,
+
+      negative:
+        stats.negative,
+
+      counts:
+        stats.counts,
+
+      summary:
+        insights.summary || "",
+
+      audienceOpinions:
+        insights.audienceOpinions || [],
+
+      contentIdeas:
+        insights.contentIdeas || [],
+
+      analyzedAt:
+        new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error(error);
+
+    return sendJson(
+      {
+        error:
+          error?.message ||
+          "حدث خطأ أثناء التحليل.",
+      },
+      500
+    );
+  }
+        }
