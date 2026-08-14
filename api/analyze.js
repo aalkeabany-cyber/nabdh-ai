@@ -1,4 +1,4 @@
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.5-flash";
 const MAX_COMMENTS = 300;
 const CHUNK_SIZE = 50;
 const FIXED_SEED = 260814;
@@ -170,9 +170,9 @@ async function askGemini(
         ],
 
         generationConfig: {
-          temperature: 0,
+          
           seed: seed,
-          candidateCount: 1,
+          
           maxOutputTokens: 8192,
           responseMimeType: "application/json",
           responseJsonSchema: schema,
