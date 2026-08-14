@@ -9,7 +9,61 @@ const menuBtn = $('menuBtn');
 const drawer = $('drawer');
 const drawerClose = $('drawerClose');
 const backdrop = $('backdrop');
+const CACHE_VERSION = 'v1';
 
+function getVideoIdForCache(value) {
+  try {
+    const url = new URL(value.trim());
+
+    if (url.hostname.includes('youtu.be')) {
+      return url.pathname.split('/').filter(Boolean)[0] || null;
+    }
+
+    const normalId = url.searchParams.get('v');
+    if (normalId) return normalId;
+
+    const parts = url.pathname.split('/').filter(Boolean);
+
+    if (parts.includes('shorts')) {
+      return parts[parts.indexOf('shorts') + 1] || null;
+    }
+
+    if (parts.includes('embed')) {
+      return parts[parts.indexOf('embed') + 1] || null;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getCachedAnalysis(videoUrl) {
+  const videoId = getVideoIdForCache(videoUrl);
+  if (!videoId) return null;
+
+  try {
+    const saved = localStorage.getItem(
+      `nabdh-${CACHE_VERSION}-${videoId}`
+    );
+
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedAnalysis(videoUrl, data) {
+  const videoId = getVideoIdForCache(videoUrl);
+  if (!videoId) return;
+
+  try {
+    localStorage.setItem(
+      `nabdh-${CACHE_VERSION}-${videoId}`,
+      JSON.stringify(data)
+    );
+  } catch {}
+}
 function isYouTubeUrl(value) {
   try {
     const url = new URL(value.trim());
@@ -92,7 +146,24 @@ if (urlInput) {
 if (analyzeBtn) {
   analyzeBtn.addEventListener('click', async () => {
     if (!isYouTubeUrl(urlInput.value)) return;
+const videoUrl = urlInput.value.trim();
+const cachedData = getCachedAnalysis(videoUrl);
 
+if (cachedData) {
+  fill(
+    cachedData,
+    cachedData.commentsCount || cachedData.analyzedComments || 0
+  );
+
+  if (result) result.hidden = false;
+
+  result?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+
+  return;
+}
     const oldText = analyzeBtn.innerHTML;
 
     analyzeBtn.disabled = true;
@@ -118,6 +189,7 @@ if (analyzeBtn) {
         throw new Error(data.error || 'تعذر إكمال التحليل.');
       }
 
+      saveCachedAnalysis(videoUrl, data);
       fill(
         {
           summary:
