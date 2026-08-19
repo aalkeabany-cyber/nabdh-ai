@@ -601,7 +601,8 @@ export async function POST(request) {
 
       contentIdeas:
         insights.contentIdeas || [],
-
+problems:
+  insights.problems || [],
       analyzedAt:
         new Date().toISOString(),
     });
