@@ -225,9 +225,15 @@ if (cachedData) {
           ),
 
           idea: arrayToText(
-            data.problems ||
-            data.analysis?.problems
-          )
+  data.problems?.length ? data.problems :
+  data.analysis?.problems?.length ? data.analysis.problems :
+  data.negatives?.length ? data.negatives :
+  data.analysis?.negatives?.length ? data.analysis.negatives :
+  data.issues?.length ? data.issues :
+  data.analysis?.issues?.length ? data.analysis.issues :
+  data.problemsAndNegatives?.length ? data.problemsAndNegatives :
+  data.analysis?.problemsAndNegatives
+)
         },
         data.commentsAnalyzed || 0
       );
