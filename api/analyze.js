@@ -1,5 +1,6 @@
 const MODEL = "gemini-3.5-flash-lite";
-const MAX_COMMENTS = 60;
+const MAX_COMMENTS = 200;
+const SAMPLE_SIZE = 60;
 const CHUNK_SIZE = 60;
 const FIXED_SEED = 260814;
 
@@ -109,7 +110,21 @@ async function getComments(videoId, youtubeKey) {
     }
   }
 
-  return Array.from(unique.values());
+  const uniqueComments = Array.from(unique.values());
+
+if (uniqueComments.length <= SAMPLE_SIZE) {
+  return uniqueComments;
+}
+
+const sample = [];
+const step = uniqueComments.length / SAMPLE_SIZE;
+
+for (let i = 0; i < SAMPLE_SIZE; i++) {
+  const index = Math.floor(i * step);
+  sample.push(uniqueComments[index]);
+}
+
+return sample;
 }
 
 const sentimentSchema = {
