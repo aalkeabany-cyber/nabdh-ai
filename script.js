@@ -39,6 +39,8 @@ function getVideoIdForCache(value) {
 }
 
 function getCachedAnalysis(videoUrl) {
+  return null;
+}
   const videoId = getVideoIdForCache(videoUrl);
   if (!videoId) return null;
 
