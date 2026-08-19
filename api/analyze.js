@@ -1,5 +1,5 @@
 const MODEL = "gemini-3.5-flash-lite";
-const MAX_COMMENTS = 300;
+const MAX_COMMENTS = 100;
 const CHUNK_SIZE = 50;
 const FIXED_SEED = 260814;
 
