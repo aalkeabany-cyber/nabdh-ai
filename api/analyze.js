@@ -1,6 +1,6 @@
 const MODEL = "gemini-3.5-flash-lite";
-const MAX_COMMENTS = 100;
-const CHUNK_SIZE = 50;
+const MAX_COMMENTS = 60;
+const CHUNK_SIZE = 60;
 const FIXED_SEED = 260814;
 
 const corsHeaders = {
