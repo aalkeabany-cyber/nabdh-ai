@@ -385,32 +385,39 @@ function calculatePercentages(comments) {
 const insightSchema = {
   type: "object",
   properties: {
-    summary: {
+  summary: {
+    type: "string",
+  },
+
+  audienceOpinions: {
+    type: "array",
+    items: {
       type: "string",
-    },
-
-    audienceOpinions: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-    },
-
-    contentIdeas: {
-      type: "array",
-      items: {
-        type: "string",
-      },
     },
   },
 
-  required: [
-    "summary",
-    "audienceOpinions",
-    "contentIdeas"
-  ],
-};
+  contentIdeas: {
+    type: "array",
+    items: {
+      type: "string",
+    },
+  },
 
+  problems: {
+    type: "array",
+    items: {
+      type: "string",
+    },
+  },
+},
+
+required: [
+  "summary",
+  "audienceOpinions",
+  "contentIdeas",
+  "problems"
+],
+};
 async function createInsights(
   comments,
   stats,
